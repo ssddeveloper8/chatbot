@@ -1,6 +1,15 @@
-def build_prompt(query, schema_text, examples):
+def build_prompt(query, schema_text):
     return f"""
 You are an expert SQL generator.
+
+TASK:
+1. Detect if query contains KPI or TAG
+2. Generate SQL
+
+RULES:
+- Use ONLY given schema
+- Only SELECT queries
+- No explanation
 
 CRITICAL DATABASE RULE:
 

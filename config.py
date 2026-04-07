@@ -7,10 +7,9 @@ MAX_ROWS = 100
 TOP_K_TABLES = 5
 
 DB_DESCRIPTIONS = {
-    "builder": "contains user data, configuration, KPI definitions,TAG definitions, All configuration, tables like tbl_mst_user, tbl_kpi_engine_kpi_calculation, department data, user info",
-    "historian": "contains KPI values, performance data, time series data, tag values, sensor data, tables like tbl_current_kpi_historian_data, KPI performance, time series, tag data"
+    "builder": "contains user data, KPI definitions, tag definitions, config tables",
+    "historian": "contains KPI values, time series data, tag values, sensor data"
 }
-
 
 DATABASES = {
     "builder": {

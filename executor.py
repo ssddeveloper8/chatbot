@@ -1,4 +1,4 @@
-from database import get_connection
+from database import get_connection, release_connection
 
 def execute_sql(db_name, sql):
     conn = get_connection(db_name)
@@ -10,6 +10,6 @@ def execute_sql(db_name, sql):
     cols = [desc[0] for desc in cursor.description]
 
     cursor.close()
-    conn.close()
+    release_connection(db_name, conn)
 
     return [dict(zip(cols, r)) for r in rows]
