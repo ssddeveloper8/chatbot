@@ -12,20 +12,16 @@ from database import init_pools
 
 app = FastAPI()
 
-# Init DB pools
 init_pools()
 
-# Load schemas
 schemas = {
     "builder": extract_schema("builder"),
     "historian": extract_schema("historian")
 }
 
-# Build table embeddings once
 for schema in schemas.values():
     build_table_embeddings(schema)
 
-# Cache
 CACHE = {}
 
 @app.post("/ask")
@@ -34,21 +30,17 @@ async def ask_api(request: Request):
     body = await request.body()
     user_query = normalize_text(body.decode("utf-8"))
 
-    # ✅ Cache check
     if user_query in CACHE:
         return CACHE[user_query]
 
-    # ✅ DB selection
     db = select_database(user_query)
 
     schema = schemas[db]
 
-    # ✅ Table selection
     tables = select_tables(user_query)
 
     schema_text = format_schema(schema, tables)
 
-    # ✅ Single LLM call
     prompt = build_prompt(user_query, schema_text)
     sql = generate_sql(prompt)
 
@@ -65,7 +57,6 @@ async def ask_api(request: Request):
         "data": data
     }
 
-    # ✅ Cache result
     CACHE[user_query] = result
 
     return result
