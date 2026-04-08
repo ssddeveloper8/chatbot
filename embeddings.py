@@ -8,7 +8,6 @@ DB_EMBEDDINGS = {
     db: model.encode(desc)
     for db, desc in DB_DESCRIPTIONS.items()
 }
-
 def embed(text):
     return model.encode(text)
 

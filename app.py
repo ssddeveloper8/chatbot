@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from schema_loader import extract_schema, format_schema
@@ -15,10 +15,10 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[""],
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=[""],
-    allow_headers=[""],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 init_pools()
@@ -35,7 +35,6 @@ CACHE = {}
 
 @app.post("/ask")
 async def ask_api(request: Request):
-
     body = await request.body()
     user_query = normalize_text(body.decode("utf-8"))
 
@@ -43,13 +42,9 @@ async def ask_api(request: Request):
         return CACHE[user_query]
 
     db = select_database(user_query)
-
     schema = schemas[db]
-
     tables = select_tables(user_query)
-
     schema_text = format_schema(schema, tables)
-
     prompt = build_prompt(user_query, schema_text)
     sql = generate_sql(prompt)
 
@@ -67,5 +62,8 @@ async def ask_api(request: Request):
     }
 
     CACHE[user_query] = result
-
     return result
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}

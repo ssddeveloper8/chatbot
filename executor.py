@@ -11,5 +11,5 @@ def execute_sql(db_name, sql):
 
     cursor.close()
     release_connection(db_name, conn)
-
+    
     return [dict(zip(cols, r)) for r in rows]
