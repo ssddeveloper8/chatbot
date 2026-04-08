@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from schema_loader import extract_schema, format_schema
 from table_selector import select_tables, build_table_embeddings
@@ -11,6 +12,14 @@ from db_selector import select_database
 from database import init_pools
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[""],
+    allow_credentials=True,
+    allow_methods=[""],
+    allow_headers=[""],
+)
 
 init_pools()
 
