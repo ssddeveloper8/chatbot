@@ -8,12 +8,6 @@ pipeline {
 
     stages {
 
-        stage('Clone Repo') {
-            steps {
-                git 'https://github.com/ssddeveloper8/chatbot.git'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
