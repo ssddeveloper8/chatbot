@@ -10,25 +10,13 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${IMAGE_NAME}:${TAG}")
-                }
+                sh 'docker build -t ${IMAGE_NAME}:${TAG} .'
             }
         }
 
         stage('Run Tests') {
             steps {
                 sh 'docker run --rm ${IMAGE_NAME}:${TAG} pytest'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    docker.withRegistry('', 'dockerhub-credentials-id') {
-                        docker.image("${IMAGE_NAME}:${TAG}").push()
-                    }
-                }
             }
         }
 
