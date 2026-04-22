@@ -18,12 +18,7 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                script {
-                    docker.image("${IMAGE_NAME}:${TAG}").inside {
-                        sh 'pip install -r requirements.txt'
-                        sh 'pytest'
-                    }
-                }
+                sh 'docker run --rm ${IMAGE_NAME}:${TAG} pytest'
             }
         }
 
