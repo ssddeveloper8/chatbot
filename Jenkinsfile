@@ -10,22 +10,22 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:${TAG} .'
+                bat 'docker build -t %IMAGE_NAME%:%TAG% .'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'docker run --rm ${IMAGE_NAME}:${TAG} pytest'
+                bat 'docker run --rm %IMAGE_NAME%:%TAG% pytest'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh '''
-                docker stop python-app || true
-                docker rm python-app || true
-                docker run -d -p 5000:5000 --name python-app ${IMAGE_NAME}:${TAG}
+                bat '''
+                docker stop python-app || exit 0
+                docker rm python-app || exit 0
+                docker run -d -p 5000:5000 --name python-app %IMAGE_NAME%:%TAG%
                 '''
             }
         }
