@@ -23,8 +23,14 @@ pipeline {
         stage('Deploy') {
             steps {
                 bat '''
-                docker stop python-app || exit 0
-                docker rm python-app || exit 0
+                docker ps -a -q -f name=python-app > temp.txt
+                set /p container=<temp.txt
+
+                if not "%container%"=="" (
+                    docker stop python-app
+                    docker rm python-app
+                )
+
                 docker run -d -p 5000:5000 --name python-app %IMAGE_NAME%:%TAG%
                 '''
             }
