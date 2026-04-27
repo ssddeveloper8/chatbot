@@ -1,8 +1,13 @@
 import os
 
-# LLM Config
+
+OLLAMA_URL = os.getenv(
+    "OLLAMA_URL",
+    "http://localhost:11434/api/generate"  
+)
+
 MODEL_NAME = os.getenv("MODEL_NAME", "mistral")
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://host.docker.internal:11434/api/generate")
+
 
 # Embedding Model
 EMBED_MODEL = os.getenv("EMBED_MODEL", "all-MiniLM-L6-v2")

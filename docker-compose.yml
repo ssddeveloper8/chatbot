@@ -1,29 +1,29 @@
 version: "3.9"
 
 services:
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: Builder_DB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432"
+
   app:
     build: .
-    container_name: python-app
-    ports:
-      - "8000:8000"
-
+    depends_on:
+      - db
     environment:
-      MODEL_NAME: mistral
-      OLLAMA_URL: http://host.docker.internal:11434/api/generate
-
-      BUILDER_DB_HOST: host.docker.internal
+      BUILDER_DB_HOST: db
       BUILDER_DB_PORT: 5432
       BUILDER_DB_NAME: Builder_DB
       BUILDER_DB_USER: postgres
       BUILDER_DB_PASSWORD: admin
 
-      HISTORIAN_DB_HOST: host.docker.internal
+      HISTORIAN_DB_HOST: db
       HISTORIAN_DB_PORT: 5432
       HISTORIAN_DB_NAME: Historian_DB
       HISTORIAN_DB_USER: postgres
       HISTORIAN_DB_PASSWORD: admin
-
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
-    restart: always
