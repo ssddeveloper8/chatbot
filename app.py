@@ -1,69 +1,65 @@
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Body
 
-from schema_loader import extract_schema, format_schema
-from table_selector import select_tables, build_table_embeddings
-from prompt_builder import build_prompt
-from llm import generate_sql
-from validator import validate_sql
-from executor import execute_sql
-from utils import normalize_text
-from db_selector import select_database
-from database import init_pools
+from db.connection import get_connections
+from core.llm import parse_query
+from core.entity import detect_entity, split_entities
+from core.intent import detect_intent
+from core.query_engine import handle_query
+
+from utils.aggregation import normalize_agg, extract_agg_from_query
+from utils.date_utils import handle_relative_dates
 
 app = FastAPI()
+connections = get_connections()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-init_pools()
-
-schemas = {
-    "builder": extract_schema("builder"),
-    "historian": extract_schema("historian")
-}
-
-for schema in schemas.values():
-    build_table_embeddings(schema)
-
-CACHE = {}
 
 @app.post("/ask")
-async def ask_api(request: Request):
-    body = await request.body()
-    user_query = normalize_text(body.decode("utf-8"))
+def ask(query: str = Body(...)):
 
-    if user_query in CACHE:
-        return CACHE[user_query]
+    parsed = parse_query(query)
+    parsed["raw_query"] = query
 
-    db = select_database(user_query)
-    schema = schemas[db]
-    tables = select_tables(user_query)
-    schema_text = format_schema(schema, tables)
-    prompt = build_prompt(user_query, schema_text)
-    sql = generate_sql(prompt)
+    entity_type, names = detect_entity(parsed, query)
 
-    valid, err = validate_sql(sql, schema)
-    if not valid:
-        return {"error": err, "sql": sql}
+    if not entity_type:
+        return {"error": "No entity detected"}
 
-    data = execute_sql(db, sql)
+    names = split_entities(names)
+    names = [n.strip() for n in names if n.strip()]
 
-    result = {
-        "query": user_query,
-        "database": db,
-        "sql": sql,
-        "data": data
+    parsed = handle_relative_dates(parsed)
+
+    llm_agg = normalize_agg(parsed.get("aggregation"))
+    rule_agg = extract_agg_from_query(query)
+
+    agg = rule_agg if rule_agg else llm_agg
+
+    if not agg:
+        agg = ["latest"]
+        
+    if not agg:
+        agg = ["latest"]
+
+    intent = detect_intent(parsed, query)
+
+    result = handle_query(parsed, connections, entity_type, names, agg, intent)
+
+    response = {
+        "query": query,
+        "entity": entity_type,
+        "intent": intent,
+        "results": result
     }
 
-    CACHE[user_query] = result
-    return result
+    if parsed.get("start_date") or parsed.get("end_date"):
+        response["date_range"] = {
+            "start_date": parsed.get("start_date"),
+            "end_date": parsed.get("end_date")
+        }
 
-@app.get("/health")
-async def health_check():
-    return {"status": "ok"}
+    print("Parsed:", parsed)
+    print("Names:", names)
+    print("Agg:", agg)
+    print("Intent:", intent)
+
+    return response
